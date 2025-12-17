@@ -1,0 +1,894 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const videos = $input.first().json.items;\nconst processedVideos = videos.map(video => ({\n  videoId: video.id.videoId,\n  title: video.snippet.title,\n  description: video.snippet.description,\n  thumbnail: video.snippet.thumbnails.high?.url || video.snippet.thumbnails.medium.url,\n  publishedAt: video.snippet.publishedAt,\n  youtubeUrl: `https://www.youtube.com/watch?v=${video.id.videoId}`,\n  channelTitle: video.snippet.channelTitle\n}));\nreturn processedVideos;"
+      },
+      "id": "d2c3a4c4-8bb0-4d53-8380-0bdc228a9e40",
+      "name": "Process YouTube Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3520,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "videos",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "youtube_video_id",
+              "fieldValue": "={{ $json.youtube_video_id }}"
+            },
+            {
+              "fieldId": "title",
+              "fieldValue": "={{ $json.title }}"
+            },
+            {
+              "fieldId": "description",
+              "fieldValue": "={{ $json.description }}"
+            },
+            {
+              "fieldId": "thumbnail_url",
+              "fieldValue": "={{ $json.thumbnail }}"
+            },
+            {
+              "fieldId": "youtube_url",
+              "fieldValue": "={{ $json.youtubeUrl }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $now }}"
+            },
+            {
+              "fieldId": "channelTitle",
+              "fieldValue": "={{ $json.channelTitle }}"
+            }
+          ]
+        }
+      },
+      "id": "317caee1-3a1e-4878-afb1-1095d871a107",
+      "name": "Insert New Video",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2848,
+        48
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "workflow_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "workflow_name",
+              "fieldValue": "youtube_to_instagram"
+            },
+            {
+              "fieldId": "youtube_video_id",
+              "fieldValue": "={{ $json.youtube_video_id }}"
+            },
+            {
+              "fieldId": "step_name",
+              "fieldValue": "video_inserted"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "New video recorded in database"
+            },
+            {
+              "fieldId": "youtube_url",
+              "fieldValue": "={{ $json.youtube_url }}"
+            }
+          ]
+        }
+      },
+      "id": "b385f1fb-6002-4db4-82b9-7bd4f7b6824f",
+      "name": "Log Video Insert",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2624,
+        48
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://your-video-downlader-url/download?url={{ $('Insert New Video').item.json.youtube_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "f0800ee8-4380-4ad4-bca1-82590c140718",
+      "name": "Call Downloader Service",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -2176,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "videos",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "youtube_video_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Code in JavaScript').item.json.youtube_video_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "downloaded",
+              "fieldValue": "={{ $json.success }}"
+            },
+            {
+              "fieldId": "download_url",
+              "fieldValue": "={{ $json.downloadUrl }}"
+            },
+            {
+              "fieldId": "download_filename",
+              "fieldValue": "={{ $json.filename }}"
+            },
+            {
+              "fieldId": "processed_at",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "id": "f9b02378-e8bb-4e46-b046-cd183dd06e3b",
+      "name": "Update Download Status",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        -48
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "workflow_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "workflow_name",
+              "fieldValue": "youtube_to_instagram"
+            },
+            {
+              "fieldId": "youtube_video_id",
+              "fieldValue": "={{ $json.youtube_video_id }}"
+            },
+            {
+              "fieldId": "step_name",
+              "fieldValue": "=download_completed"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "success"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "=Video downloaded successfully - {{ $json.download_filename }}"
+            },
+            {
+              "fieldId": "youtube_url",
+              "fieldValue": "={{ $json.youtube_url }}"
+            },
+            {
+              "fieldId": "data",
+              "fieldValue": "={{ $('Code in JavaScript3').item.json.fileSize }}{{ $('Code in JavaScript3').item.json.duration }}{{ $('Code in JavaScript3').item.json.filename }}"
+            }
+          ]
+        }
+      },
+      "id": "5e6281fd-b478-4111-91f7-7736fef21687",
+      "name": "Log Download Success",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -848,
+        -48
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.instagram.com/v24.0/your-instagram-id/media_publish",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "creation_id",
+              "value": "={{ $json.id }}"
+            },
+            {
+              "name": "access_token",
+              "value": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2b777299-0c68-4674-87ad-e19803f4812c",
+      "name": "Publish Instagram Reel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -192,
+        -48
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "videos",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "youtube_video_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Code in JavaScript1').item.json.youtube_video_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "posted_to_instagram",
+              "fieldValue": "true"
+            },
+            {
+              "fieldId": "instagram_post_id",
+              "fieldValue": "={{ $json.id }}"
+            },
+            {
+              "fieldId": "instagram_post_url",
+              "fieldValue": "=https://www.instagram.com/reel/ {{ $json.id }}"
+            },
+            {
+              "fieldId": "processed_at",
+              "fieldValue": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "id": "c125db63-f3d9-499b-b1e4-9c27e7af500a",
+      "name": "Update Instagram Status",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        48,
+        -48
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "workflow_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "youtube_video_id",
+              "fieldValue": "={{ $json.youtube_video_id }}"
+            },
+            {
+              "fieldId": "youtube_url",
+              "fieldValue": "={{ $json.instagram_post_url }}"
+            },
+            {
+              "fieldId": "step_name",
+              "fieldValue": "Instagram published"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "suscess"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "=Reel successfully published to Instagram - ID: {{ $json.instagram_post_id }}"
+            }
+          ]
+        }
+      },
+      "id": "b357eff2-9098-4846-b35c-163a01df3695",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        256,
+        -48
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "insert"
+      },
+      "id": "a28078d0-c5bf-4d48-959c-a896b777f17a",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1504,
+        144
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "videos",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "youtube_video_id",
+              "keyValue": "={{ $json.videoId }}"
+            }
+          ]
+        }
+      },
+      "id": "8863521c-a571-41d5-b20e-9eed202ccb85",
+      "name": "Check Each Videos",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3312,
+        -160
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "",
+          "name": "Supabase account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const allInputs = $input.all();\nconsole.log('Number of inputs:', allInputs.length);\n\n// Get the video data - handle different input structures\nlet videoData;\n\nif (allInputs.length > 0) {\n  // If input is an array of items, take the first one\n  if (Array.isArray(allInputs[0].json)) {\n    videoData = allInputs[0].json[0];\n  } else {\n    videoData = allInputs[0].json;\n  }\n}\n\nconsole.log('Video data:', videoData);\n\n// If no valid video data, return empty\nif (!videoData || !videoData.videoId) {\n  console.log('ERROR: No valid video data found');\n  return [];\n}\n\n// Process the video\nreturn [{\n  json: {\n    youtube_video_id: videoData.videoId,\n    title: videoData.title,\n    description: videoData.description || \"\",\n    thumbnail: videoData.thumbnail,\n    publishedAt: videoData.publishedAt,\n    youtubeUrl: videoData.youtubeUrl,\n    channelTitle: videoData.channelTitle,\n    existsInDb: false,\n    postedToInstagram: false,\n    action: 'insert_and_process'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3072,
+        48
+      ],
+      "id": "83fcdc4c-e888-4d9b-89c9-e077539c13b8",
+      "name": "filter and decide "
+    },
+    {
+      "parameters": {
+        "jsCode": "const previousData = $input.all()[0].json;\nconst youtubeUrl = previousData.youtube_url;\n\nconsole.log('🔍 YouTube URL:', youtubeUrl);\n\nif (!youtubeUrl) {\n  throw new Error('No YouTube URL found. Available fields: ' + Object.keys(previousData).join(', '));\n}\n\nconst options = {\n  method: 'GET',\n  url: `https://mapping-uri-tract-phase.trycloudflare.com/download?url=${encodeURIComponent(youtubeUrl)}`,\n  headers: {\n    'Accept': 'application/json'\n  },\n  json: true,\n  timeout: 300000\n};\n\ntry {\n  const response = await this.helpers.request(options);\n  \n  console.log('📥 Download response:', response);\n  \n  if (response.success) {\n    return [{\n      json: {\n        youtube_video_id: previousData.youtube_video_id,\n        youtube_url: youtubeUrl,\n        downloadUrl: response.downloadUrl,\n        filename: response.filename,\n        fileSize: response.fileSize,\n        success: true\n      }\n    }];\n  } else {\n    throw new Error(response.error || 'Download failed');\n  }\n} catch (error) {\n  console.error('❌ Download error:', error);\n  \n  return [{\n    json: {\n      youtube_video_id: previousData.youtube_video_id,\n      youtube_url: youtubeUrl,\n      downloadUrl: null,\n      success: false,\n      error: error.message\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2400,
+        48
+      ],
+      "id": "854a5464-9436-4bc7-aea6-6d17d88e0447",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Debug: See what data we're getting\nconst inputData = $input.all();\nconsole.log('=== DEBUG CHECK DOWNLOAD SUCCESS INPUT ===');\nconsole.log('Number of items:', inputData.length);\nconsole.log('First item data:', JSON.stringify(inputData[0].json, null, 2));\n\n// Just pass through the data\nreturn inputData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1952,
+        48
+      ],
+      "id": "6966887a-64f8-4849-8e4c-a7ded122a943",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a69bf41b-1017-404a-962c-36e8c0f758ce",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9cbd6a05-1d5a-47b7-8984-d8a351ca071a",
+              "leftValue": "={{ $json.downloadUrl }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1728,
+        48
+      ],
+      "id": "ca71d7b1-5c66-472a-a9a5-d7885e87dc18",
+      "name": "Check Download Success"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all()[0].json;\nconsole.log('=== DEBUG UPDATE DATA ===');\nconsole.log('All data keys:', Object.keys(data));\nconsole.log('downloadUrl:', data.downloadUrl);\nconsole.log('fileSize:', data.fileSize);\n\n// Check if we can access the videoId from earlier nodes\ntry {\n  const videoIdFromCodeNode = $('Code in JavaScript').item.json.youtube_video_id;\n  console.log('videoId from Code node:', videoIdFromCodeNode);\n} catch (e) {\n  console.log('Cannot access videoId from Code node:', e.message);\n}\n\nreturn [{ json: data }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1504,
+        -48
+      ],
+      "id": "06046f02-f6df-4fc6-9e01-f1dfe4650831",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Debug: Check update result\nconst inputData = $input.all();\nconsole.log('=== UPDATE RESULT DEBUG ===');\nconsole.log('Number of items:', inputData.length);\nconsole.log('Update response:', JSON.stringify(inputData[0].json, null, 2));\n\n// Check if we have the video ID\ntry {\n  const videoId = $('Code in JavaScript').item.json.youtube_video_id;\n  console.log('Video ID being updated:', videoId);\n} catch (e) {\n  console.log('Error getting video ID:', e.message);\n}\n\nreturn inputData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1072,
+        -48
+      ],
+      "id": "9916b93d-c856-4af9-9d70-1d6633bd09b6",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.instagram.com/v24.0/your-instagram-id(not-username)/media",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "media_type",
+              "value": "REELS"
+            },
+            {
+              "name": "video_url",
+              "value": "={{ $('Code in JavaScript1').item.json.download_url }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $('Code in JavaScript1').item.json.title }}"
+            },
+            {
+              "name": "access_token",
+              "value": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -624,
+        -48
+      ],
+      "id": "93564509-50ff-4b27-973b-5d81e8414a3e",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "amount": 2,
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -416,
+        -48
+      ],
+      "id": "b6baa1c8-c920-43ba-bf34-2e66287760e1",
+      "name": "Wait",
+      "webhookId": "d950e4f7-3142-4556-923f-37a1dd7f2db3"
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "key",
+              "value": ""
+            },
+            {
+              "name": "channelId",
+              "value": ""
+            },
+            {
+              "name": "part",
+              "value": "snippet"
+            },
+            {
+              "name": "order",
+              "value": "date"
+            },
+            {
+              "name": "maxResults",
+              "value": "5"
+            },
+            {
+              "name": "type",
+              "value": "video"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "0e9eebd2-996d-4e88-9cf2-8994d19c33b9",
+      "name": "Fetch YouTube Videos r2e",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -3824,
+        48
+      ]
+    },
+    {
+      "parameters": {
+        "triggerTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        }
+      },
+      "id": "f947581e-8a0b-4188-93d0-fbb8d94d27d6",
+      "name": "1 hour",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        -4144,
+        48
+      ]
+    }
+  ],
+  "connections": {
+    "Process YouTube Data": {
+      "main": [
+        [
+          {
+            "node": "Check Each Videos",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "filter and decide ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert New Video": {
+      "main": [
+        [
+          {
+            "node": "Log Video Insert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Video Insert": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Downloader Service": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Download Status": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Download Success": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish Instagram Reel": {
+      "main": [
+        [
+          {
+            "node": "Update Instagram Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Instagram Status": {
+      "main": [
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Each Videos": {
+      "main": [
+        [
+          {
+            "node": "filter and decide ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "filter and decide ": {
+      "main": [
+        [
+          {
+            "node": "Insert New Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Call Downloader Service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Check Download Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Download Success": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Update Download Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Log Download Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Publish Instagram Reel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch YouTube Videos r2e": {
+      "main": [
+        [
+          {
+            "node": "Process YouTube Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1 hour": {
+      "main": [
+        [
+          {
+            "node": "Fetch YouTube Videos r2e",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4b20929f39f99599182551fbd0d4ebe3a352b10a34ba28fe45b85c48f36c0963"
+  }
+}

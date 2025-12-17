@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geo R2E - AI Auto Reel Uploader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --secondary: #f3f4f6;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        html[data-theme="dark"] {
+            --primary: #3b82f6;
+            --secondary: #1f2937;
+            --text: #f3f4f6;
+            --text-light: #d1d5db;
+            --border: #374151;
+            --bg: #111827;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            color: var(--text);
+            background-color: var(--bg);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            line-height: 1.6;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            background-color: var(--bg);
+            border-bottom: 1px solid var(--border);
+            z-index: 1000;
+            box-shadow: 0 1px 3px var(--shadow);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 2rem;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary);
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .nav-center {
+            display: flex;
+            gap: 2rem;
+            flex: 1;
+            justify-content: center;
+        }
+
+        .nav-link {
+            cursor: pointer;
+            color: var(--text-light);
+            transition: color 0.3s ease;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--primary);
+        }
+
+        .nav-right {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        button {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        button:hover {
+            background-color: var(--secondary);
+            border-color: var(--primary);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            font-size: 1.5rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: var(--primary);
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        p {
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            text-align: justify;
+            line-height: 1.8;
+        }
+
+        .card {
+            background-color: var(--secondary);
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .hero {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .hero-text h1 {
+            color: var(--primary);
+        }
+
+        .hero-text p {
+            font-size: 1.1rem;
+            color: var(--text-light);
+        }
+
+        .cta-button {
+            display: inline-block;
+            background-color: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            width: fit-content;
+        }
+
+        .cta-button:hover {
+            background-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background-color: var(--secondary);
+            padding: 2rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .feature-card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .workflow-step {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            align-items: flex-start;
+        }
+
+        .step-number {
+            background-color: var(--primary);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content h3 {
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-width: 600px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 0.85rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background-color: var(--secondary);
+            color: var(--text);
+            font-family: inherit;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        /* Enhanced contact button styling */
+        .contact-submit-btn {
+            padding: 1rem 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            margin-top: 0.5rem;
+        }
+
+        .contact-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .contact-submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Enhanced contact buttons (Email & Instagram only) */
+        .contact-buttons {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .contact-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            background-color: var(--secondary);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .contact-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.2);
+        }
+
+        .contact-btn.email-btn {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: var(--primary);
+        }
+
+        .contact-btn.instagram-btn {
+            background-color: rgba(236, 72, 153, 0.1);
+            border-color: #ec4899;
+        }
+
+        .contact-btn.instagram-btn:hover {
+            color: #ec4899;
+            border-color: #ec4899;
+            box-shadow: 0 6px 16px rgba(236, 72, 153, 0.2);
+        }
+
+        .contact-icon {
+            font-size: 1.5rem;
+        }
+
+        .form-success {
+            padding: 1rem;
+            background-color: rgba(34, 197, 94, 0.1);
+            border-left: 4px solid #22c55e;
+            border-radius: 6px;
+            color: var(--text);
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .form-success.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        footer {
+            background-color: var(--secondary);
+            padding: 2rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 1.5rem 0;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-credit {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            padding-top: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                padding: 1rem;
+                gap: 1rem;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            .nav-center {
+                display: none;
+            }
+
+            .nav-center.active {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: 60px;
+                left: 0;
+                right: 0;
+                background-color: var(--bg);
+                border-bottom: 1px solid var(--border);
+                padding: 1rem;
+                gap: 0.5rem;
+                z-index: 999;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.8rem;
+            }
+
+            .container {
+                padding: 2rem 1rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-links {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+            }
+
+            .card {
+                padding: 1rem;
+            }
+
+            nav {
+                padding: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo" onclick="navigateTo('home')">
+                <span>Geo AI</span>
+            </div>
+            <div class="nav-center" id="navMenu">
+                <span class="nav-link active" onclick="navigateTo('home')">
+                    <span data-en="Home" data-hi="होम"></span>
+                </span>
+                <span class="nav-link" onclick="navigateTo('about')">
+                    <span data-en="About" data-hi="हमारे बारे में"></span>
+                </span>
+                <span class="nav-link" onclick="navigateTo('howitworks')">
+                    <span data-en="How It Works" data-hi="यह कैसे काम करता है"></span>
+                </span>
+                <span class="nav-link" onclick="navigateTo('privacy')">
+                    <span data-en="Privacy" data-hi="गोपनीयता"></span>
+                </span>
+                <span class="nav-link" onclick="navigateTo('copyright')">
+                    <span data-en="Copyright" data-hi="कॉपीराइट"></span>
+                </span>
+                <span class="nav-link" onclick="navigateTo('contact')">
+                    <span data-en="Contact" data-hi="संपर्क"></span>
+                </span>
+            </div>
+            <div class="nav-right">
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <span id="themeIcon">🌙</span>
+                </button>
+                <button class="language-toggle" onclick="toggleLanguage()">
+                    <span id="langText">हिंदी</span>
+                </button>
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- HOME PAGE -->
+    <div id="home" class="page active">
+        <section class="container">
+            <div class="hero">
+                <div class="hero-text">
+                    <h1 data-en="Hi, I'm Geo AI" data-hi="नमस्ते, मैं GEO हूँ"></h1>
+                    <p data-en="Cybersecurity Learner • Diploma in ECE • B.Tech in ECE (Pursuing)" data-hi="साइबर सुरक्षा शिक्षार्थी • ईसीई में डिप्लोमा • बीटेक ईसीई (अनुसर्कन करना)"></p>
+                </div>
+                <div class="card">
+                    <h3 data-en="About This AI" data-hi="इस एआई के बारे में"></h3>
+                    <p data-en="My AI auto-uploads reels from YouTube to Instagram. Every video is properly credited to the original creators. This is an automated workflow that respects creator rights and content ownership." data-hi="मेरा एआई YouTube से Instagram पर रीलें स्वचालित रूप से अपलोड करता है। प्रत्येक वीडियो मूल निर्माताओं को ठीक से क्रेडिट दिया जाता है। यह एक स्वचालित वर्कफ़्लो है जो निर्माता अधिकारों और सामग्री स्वामित्व का सम्मान करता है।"></p>
+                </div>
+                <div class="card">
+                    <h3 data-en="Credit & Attribution" data-hi="श्रेय और विशेषता"></h3>
+                    <p data-en="All credit goes to the original YouTubers. No content is modified or claimed as original. We simply automate the process of sharing quality content with proper attribution." data-hi="सभी क्रेडिट मूल YouTubers को जाता है। कोई भी सामग्री संशोधित नहीं है या मूल के रूप में दावा नहीं किया जाता है। हम बस उचित विशेषता के साथ गुणवत्ता सामग्री साझा करने की प्रक्रिया को स्वचालित करते हैं।"></p>
+                </div>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3 data-en="🔄 Automated" data-hi="🔄 स्वचालित"></h3>
+                    <p data-en="Runs every 30 minutes to fetch latest videos" data-hi="नवीनतम वीडियो प्राप्त करने के लिए हर 30 मिनट में चलता है"></p>
+                </div>
+                <div class="feature-card">
+                    <h3 data-en="🎬 Smart Filtering" data-hi="🎬 स्मार्ट फ़िल्टरिंग"></h3>
+                    <p data-en="Checks database to skip duplicates" data-hi="डुप्लिकेट को छोड़ने के लिए डेटाबेस की जांच करता है"></p>
+                </div>
+                <div class="feature-card">
+                    <h3 data-en="📱 Instagram Ready" data-hi="📱 इंस्टाग्राम तैयार"></h3>
+                    <p data-en="Uploads directly as Reels with proper credits" data-hi="उचित क्रेडिट के साथ सीधे रीलों के रूप में अपलोड करता है"></p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- ABOUT PAGE -->
+    <div id="about" class="page">
+        <section class="container">
+            <h2 data-en="About Us" data-hi="हमारे बारे में"></h2>
+            
+            <div class="card">
+                <h3 data-en="Who Am I?" data-hi="मैं कौन हूँ?"></h3>
+                <p data-en="I'm Geo AI, a passionate cybersecurity learner with a diploma in Electronics and Communication Engineering (ECE) and currently pursuing a B.Tech degree in ECE. My journey combines technical knowledge with innovative automation." data-hi="मैं GEO हूँ, एक भावुक साइबर सुरक्षा शिक्षार्थी जिसके पास इलेक्ट्रॉनिक्स और संचार इंजीनियरिंग (ईसीई) में डिप्लोमा है और वर्तमान में ईसीई में बीटेक की डिग्री प्राप्त कर रहा हूँ।"></p>
+            </div>
+
+            <div class="card">
+                <h3 data-en="The Project" data-hi="परियोजना"></h3>
+                <p data-en="Geo R2E is an intelligent automation system that bridges YouTube and Instagram. It fetches trending content, validates it, and shares it with proper attribution. The system respects intellectual property rights and supports content creators." data-hi="Geo R2E एक बुद्धिमान स्वचालन प्रणाली है जो YouTube और Instagram को जोड़ता है। यह ट्रेंडिंग सामग्री को फेच करता है, इसे मान्य करता है, और उचित विशेषता के साथ साझा करता है।"></p>
+            </div>
+
+            <div class="card">
+                <h3 data-en="Our Vision" data-hi="हमारी दृष्टि"></h3>
+                <p data-en="To create seamless content distribution while respecting creator rights. We believe in automation that adds value, not content theft. Every video shared carries proper credit to the original creator." data-hi="निर्बाध सामग्री वितरण बनाना। हम स्वचालन में विश्वास करते हैं जो मूल्य जोड़ता है, सामग्री चोरी नहीं।"></p>
+            </div>
+
+            <div class="card">
+                <h3 data-en="Key Features" data-hi="मुख्य विशेषताएं"></h3>
+                <p data-en="✓ 30-minute automated sync cycle<br>✓ YouTube API integration<br>✓ Smart duplicate detection<br>✓ Instant Instagram uploads<br>✓ Complete logging & tracking<br>✓ Creator attribution system" data-hi="✓ 30 मिनट की स्वचालित सिंक साइकिल<br>✓ YouTube API एकीकरण<br>✓ स्मार्ट डुप्लिकेट डिटेक्शन<br>✓ तत्काल Instagram अपलोड<br>✓ पूर्ण लॉगिंग और ट्रैकिंग<br>✓ निर्माता विशेषता प्रणाली"></p>
+            </div>
+
+            <div class="card">
+                <h3 data-en="Connect With Me" data-hi="मुझसे जुड़ें"></h3>
+                <p data-en="Follow us on Instagram: @geo_r2e for daily updates and content" data-hi="Instagram पर हमें फॉलो करें: @geo_r2e दैनिक अपडेट और सामग्री के लिए"></p>
+                <div class="social-links">
+                    <a href="https://instagram.com/geo_r2e" target="_blank" title="Instagram">📱</a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- HOW IT WORKS PAGE -->
+    <div id="howitworks" class="page">
+        <section class="container">
+            <h2 data-en="How It Works" data-hi="यह कैसे काम करता है"></h2>
+            
+            <div class="card">
+                <p data-en="Our workflow is a seamless 6-step process that automates content distribution while maintaining integrity and proper attribution. Here's exactly how Geo R2E operates:" data-hi="हमारी वर्कफ़्लो एक निर्बाध 6-चरण की प्रक्रिया है जो सामग्री वितरण को स्वचालित करती है जबकि अखंडता और उचित विशेषता को बनाए रखती है।"></p>
+            </div>
+
+            <div class="workflow-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h3 data-en="Trigger" data-hi="ट्रिगर"></h3>
+                    <p data-en="The system runs automatically every 30 minutes via a scheduled Cron job. This ensures consistent, timely content updates without manual intervention." data-hi="सिस्टम हर 30 मिनट में एक शेड्यूल किए गए Cron जॉब के माध्यम से स्वचालित रूप से चलता है।"></p>
+                </div>
+            </div>
+
+            <div class="workflow-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h3 data-en="Fetch Videos" data-hi="वीडियो प्राप्त करें"></h3>
+                    <p data-en="Calls YouTube API to retrieve the 5 latest videos from your selected channel. Only fresh, recent content is considered for processing." data-hi="YouTube API को कॉल करके आपके चयनित चैनल से 5 नवीनतम वीडियो प्राप्त करता है।"></p>
+                </div>
+            </div>
+
+            <div class="workflow-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h3 data-en="Check Database" data-hi="डेटाबेस की जांच करें"></h3>
+                    <p data-en="For each fetched video, the system checks if it already exists in our database. This prevents duplicate uploads and maintains a clean content library." data-hi="प्रत्येक प्राप्त वीडियो के लिए, सिस्टम जांचता है कि क्या यह पहले से हमारे डेटाबेस में मौजूद है।"></p>
+                </div>
+            </div>
+
+            <div class="workflow-step">
+                <div class="step-number">4</div>
+                <div class="step-content">
+                    <h3 data-en="Download Video" data-hi="वीडियो डाउनलोड करें"></h3>
+                    <p data-en="New videos (not in database) are sent to our downloader service. The system stores download status and all video metadata in the database for tracking." data-hi="नए वीडियो (डेटाबेस में नहीं) को हमारी डाउनलोडर सेवा को भेजा जाता है।"></p>
+                </div>
+            </div>
+
+            <div class="workflow-step">
+                <div class="step-number">5</div>
+                <div class="step-content">
+                    <h3 data-en="Upload to Instagram" data-hi="Instagram पर अपलोड करें"></h3>
+                    <p data-en="Successfully downloaded videos are automatically uploaded as Instagram Reels with proper credit to the original creator. Post details are recorded in the database." data-hi="सफलतापूर्वक डाउनलोड किए गए वीडियो मूल निर्माता को उचित क्रेडिट के साथ Instagram रीलों के रूप में स्वचालित रूप से अपलोड किए जाते हैं।"></p>
+                </div>
+            </div>
+
+            <div class="workflow-step">
+                <div class="step-number">6</div>
+                <div class="step-content">
+                    <h3 data-en="Logging & Tracking" data-hi="लॉगिंग और ट्रैकिंग"></h3>
+                    <p data-en="Every step (insert, download, upload, error) is logged in our workflow logs. This creates a complete audit trail for transparency and troubleshooting." data-hi="हर कदम (इंसर्ट, डाउनलोड, अपलोड, त्रुटि) हमारे वर्कफ़्लो लॉग में दर्ज किया जाता है।"></p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 data-en="Summary" data-hi="सारांश"></h3>
+                <p data-en="Fetch → Check → Insert → Download → Upload → Log. The entire process is automated, efficient, and respectful of creator rights. Only new, verified content is processed, ensuring zero duplicates." data-hi="Fetch → Check → Insert → Download → Upload → Log। पूरी प्रक्रिया स्वचालित, कुशल और निर्माता अधिकारों के प्रति सम्मानपूर्ण है।"></p>
+            </div>
+        </section>
+    </div>
+
+    <!-- PRIVACY POLICY PAGE -->
+    <div id="privacy" class="page">
+        <section class="container">
+            <h2 data-en="Privacy Policy" data-hi="गोपनीयता नीति"></h2>
+            
+            <div class="card">
+                <h3 data-en="Content Ownership & Copyright" data-hi="सामग्री स्वामित्व और कॉपीराइट"></h3>
+                <p data-en="This app does not claim ownership of any YouTube content. All videos remain the property of their respective creators. We provide credit to the original creators when videos are published on Instagram." data-hi="यह ऐप किसी भी YouTube सामग्री का स्वामित्व नहीं लेता है। सभी वीडियो उनके संबंधित निर्माताओं की संपत्ति हैं। हम Instagram पर वीडियो प्रकाशित करते समय मूल निर्माताओं को क्रेडिट प्रदान करते हैं।"></p>
+            </div>
+
+            <div class="card">
+                <h3 data-en="Usage Disclaimer" data-hi="उपयोग अस्वीकरण"></h3>
+                <p data-en="Videos are fetched and reposted only for automated workflow purposes, with proper credit. We do not modify or sell original content. All reposted content maintains its original context and is attributed to creators." data-hi="वीडियो केवल स्वचालित वर्कफ़्लो उद्देश्यों के लिए, उचित क्रेडिट के साथ फेच और रीपोस्ट किए जाते हैं। हम मूल सामग्री को संशोधित या बेचते नहीं हैं।"></p>
+            </div>
+
+            <div class="card">
+                <h3 data-en="Data Collection" data-hi="डेटा संग्रह"></h3>
+                <p data-en="We collect minimal data necessary for service operation. This includes video metadata, timestamps, and upload logs. No personal user data is collected or shared." data-hi="हम सेवा संचालन के लिए आवश्यक न्यूनतम डेटा एकत्र करते हैं। इसमें वीडियो मेटाडेटा, टाइमस्टैम्प और अपलोड लॉग शामिल हैं।"></p>
+            </div>
+
+            <div class="card">
+                <h3 data-en="Security & Storage" data-hi="सुरक्षा और भंडारण"></h3>
+                <p data-en="All data is stored securely in encrypted databases. We implement industry-standard security practices to protect information. Data is retained only as long as necessary for service operation." data-hi="सभी डेटा एन्क्रिप्टेड डेटाबेस में सुरक्षित रूप से संग्रहीत है। हम जानकारी की सुरक्षा के लिए उद्योग-मानक सुरक्षा प्रथाएं लागू करते हैं।"></p>
+            </div>
+
+            <div class="card">
+                <h3 data-en="Third-Party APIs" data-hi="तीसरे पक्ष के API"></h3>
+                <p data-en="We use YouTube and Instagram APIs for content distribution. These platforms have their own privacy policies. We respect and comply with all platform guidelines and terms of service." data-hi="हम सामग्री वितरण के लिए YouTube और Instagram API का उपयोग करते हैं। इन प्लेटफॉर्म की अपनी गोपनीयता नीतियां हैं।"></p>
+            </div>
+
+            <div class="card">
+                <h3 data-en="Contact for Privacy Concerns" data-hi="गोपनीयता संबंधित चिंताओं के लिए संपर्क करें"></h3>
+                <p data-en="If you have any privacy concerns or questions, please reach out through our contact page. We are committed to maintaining user trust and data protection." data-hi="यदि आपके पास कोई गोपनीयता संबंधी चिंता या प्रश्न हैं, तो कृपया हमारे संपर्क पृष्ठ के माध्यम से संपर्क करें। हम उपयोगकर्ता की विश्वास रखने और डेटा सुरक्षा के लिए प्रतिबंधित हैं।"></p>
+            </div>
+        </section>
+    </div>
+
+    <!-- COPYRIGHT PAGE -->
+    <div id="copyright" class="page">
+        <section class="container">
+            <h2 data-en="Copyright & Attribution" data-hi="कॉपीराइट और विशेषता"></h2>
+            
+            <div class="card">
+                <h3 data-en="Geo R2E Copyright" data-hi="Geo R2E कॉपीराइट"></h3>
+                <p data-en="© 2025 Geo R2E. All rights reserved. The Geo R2E platform, code, and technology are proprietary and protected by copyright law." data-hi="© 2025 Geo R2E। सर्वाधिकार सुरक्षित। Geo R2E प्लेटफॉर्म, कोड और तकनीक मालिकाना हैं और कॉपीराइट कानून द्वारा संरक्षित हैं।"></p>
+            </div>
+
+            <div class="card">
+                <h3 data-en="Content Creator Rights" data-hi="सामग्री निर्माता अधिकार"></h3>
+                <p data-en="All YouTube content remains the exclusive property of the respective creators. We do not claim any ownership or copyright over the videos we distribute. Full credit is always given to original creators." data-hi="सभी YouTube सामग्री संबंधित निर्माताओं की एकमात्र संपत्ति है। हम हमारे द्वारा वितरित वीडियो पर कोई स्वामित्व या कॉपीराइट का दावा नहीं करते हैं।"></p>
+            </div>
+
+            <div class="card">
+                <h3 data-en="DMCA Compliance" data-hi="DMCA अनुपालन"></h3>
+                <p data-en="We respect copyright law and comply with DMCA regulations. If any copyright holder believes their content has been misused, please contact us immediately. We will remove content upon valid DMCA notice." data-hi="हम कॉपीराइट कानून का सम्मान करते हैं और DMCA नियमों का पालन करते हैं। यदि कोई कॉपीराइट धारक मानता है कि उनकी सामग्री का दुरुपयोग किया गया है, तो कृपया हमसे तुरंत संपर्क करें।"></p>
+            </div>
+
+            <div class="card">
+                <h3 data-en="Attribution Guidelines" data-hi="विशेषता दिशानिर्देश"></h3>
+                <p data-en="Every repost includes: Original creator name, video title, link to original video, and timestamp. We believe proper attribution is essential to respecting creator work." data-hi="हर रीपोस्ट में शामिल है: मूल निर्माता का नाम, वीडियो शीर्षक, मूल वीडियो के लिए लिंक, और टाइमस्टैम्प।"></p>
+            </div>
+
+            <div class="card">
+                <h3 data-en="Fair Use Statement" data-hi="उचित उपयोग कथन"></h3>
+                <p data-en="Our use of content is for distribution purposes with full attribution. We transform the distribution method (YouTube to Instagram) while maintaining complete credit to original creators. This respects intellectual property rights." data-hi="हमारे सामग्री का उपयोग पूर्ण विशेषता के साथ वितरण उद्देश्यों के लिए है।"></p>
+            </div>
+        </section>
+    </div>
+
+    <!-- CONTACT PAGE -->
+    <div id="contact" class="page">
+        <section class="container">
+            <h2 data-en="Contact Us" data-hi="हमसे संपर्क करें"></h2>
+            
+            <div class="card">
+                <h3 data-en="Let's Connect" data-hi="चलिए जुड़ते हैं"></h3>
+                <p data-en="Have questions or feedback about our AI reel uploader? Reach out directly via email or Instagram. We'd love to hear from you!" data-hi="हमारे AI रील अपलोडर के बारे में कोई सवाल या फीडबैक? ईमेल या Instagram के माध्यम से सीधे संपर्क करें। हम आपसे सुनना पसंद करते हैं!"></p>
+            </div>
+
+            <!-- Direct contact buttons (Email & Instagram only) -->
+            <div class="contact-buttons">
+                <a href="mailto:contact@geo-r2e.com" class="contact-btn email-btn" title="Send Email">
+                    <span class="contact-icon">✉️</span>
+                    <span data-en="Send Email" data-hi="ईमेल भेजें"></span>
+                </a>
+                <a href="https://instagram.com/geo_r2e" target="_blank" class="contact-btn instagram-btn" title="Follow Official AI Handle">
+                    <span class="contact-icon">📱</span>
+                    <span data-en="@geo_r2e (AI)" data-hi="@geo_r2e (AI)"></span>
+                </a>
+                <!-- Added owner Instagram button -->
+                <a href="https://instagram.com/geo_r2e" target="_blank" class="contact-btn instagram-btn" title="Follow Owner">
+                    <span class="contact-icon">👤</span>
+                    <span data-en="@geo_r2e (Owner)" data-hi="@geo_r2e (मालिक)"></span>
+                </a>
+            </div>
+
+            <!-- Enhanced contact form -->
+            <div class="card" style="margin-top: 3rem;">
+                <h3 data-en="Send us a Message" data-hi="हमें एक संदेश भेजें"></h3>
+                <p data-en="Fill out the form below and we'll respond as soon as possible." data-hi="नीचे दिए गए फॉर्म को भरें और हम जल्द ही जवाब देंगे।"></p>
+
+                <div id="formSuccess" class="form-success"></div>
+
+                <form class="contact-form" onsubmit="handleContactForm(event)">
+                    <div class="form-group">
+                        <label data-en="Full Name" data-hi="पूरा नाम"></label>
+                        <input type="text" id="contactName" required data-en-placeholder="John Doe" data-hi-placeholder="जॉन डो" placeholder="John Doe">
+                    </div>
+
+                    <div class="form-group">
+                        <label data-en="Email Address" data-hi="ईमेल पता"></label>
+                        <input type="email" id="contactEmail" required data-en-placeholder="you@example.com" data-hi-placeholder="आप@example.com" placeholder="you@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label data-en="Subject" data-hi="विषय"></label>
+                        <input type="text" id="contactSubject" required data-en-placeholder="e.g., Bug Report, Feature Request, Feedback" data-hi-placeholder="जैसे, बग रिपोर्ट, फीचर अनुरोध, प्रतिक्रिया" placeholder="e.g., Bug Report, Feature Request">
+                    </div>
+
+                    <div class="form-group">
+                        <label data-en="Your Message" data-hi="आपका संदेश"></label>
+                        <textarea id="contactMessage" required data-en-placeholder="Tell us more details..." data-hi-placeholder="हमें और विवरण बताएं..." placeholder="Tell us more details..."></textarea>
+                    </div>
+
+                    <button type="submit" class="contact-submit-btn" data-en="Send Message" data-hi="संदेश भेजें">Send Message</button>
+                </form>
+            </div>
+
+            <div class="card" style="margin-top: 2rem; text-align: center;">
+                <h3 data-en="Follow Our Journey" data-hi="हमारी यात्रा का अनुसरण करें"></h3>
+                <p data-en="Stay connected on Instagram for updates, announcements, and new reel uploads!" data-hi="अपडेट, घोषणाएं और नए रील अपलोड के लिए Instagram पर जुड़े रहें!"></p>
+                <p style="margin-top: 1rem; font-size: 1.1rem; font-weight: 600;">
+                    <!-- Added both Instagram handles with labels -->
+                    <span data-en="AI Handle: " data-hi="AI हैंडल: "></span>
+                    <a href="https://instagram.com/geo_r2e" target="_blank" style="color: var(--primary); text-decoration: none;">@geo_r2e</a>
+                </p>
+                <p style="margin-top: 0.5rem; font-size: 1.1rem; font-weight: 600;">
+                    <span data-en="Owner: " data-hi="मालिक: "></span>
+                    <a href="https://instagram.com/geo_r2e" target="_blank" style="color: var(--primary); text-decoration: none;">@geo_r2e</a>
+                </p>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a onclick="navigateTo('home')" style="cursor: pointer;">
+                    <span data-en="Home" data-hi="होम"></span>
+                </a>
+                <a onclick="navigateTo('about')" style="cursor: pointer;">
+                    <span data-en="About" data-hi="हमारे बारे में"></span>
+                </a>
+                <a onclick="navigateTo('howitworks')" style="cursor: pointer;">
+                    <span data-en="How It Works" data-hi="यह कैसे काम करता है"></span>
+                </a>
+                <a onclick="navigateTo('privacy')" style="cursor: pointer;">
+                    <span data-en="Privacy" data-hi="गोपनीयता"></span>
+                </a>
+                <a onclick="navigateTo('contact')" style="cursor: pointer;">
+                    <span data-en="Contact" data-hi="संपर्क"></span>
+                </a>
+            </div>
+
+            <div class="footer-credit">
+                <p data-en="All credit goes to the original content creators on YouTube. Geo R2E is an automation platform that respects creator rights." data-hi="सभी क्रेडिट YouTube पर मूल सामग्री निर्माताओं को जाता है। Geo R2E एक स्वचालन प्लेटफॉर्म है जो निर्माता अधिकारों का सम्मान करता है।"></p>
+                <p style="margin-top: 0.5rem;">© 2025 Geo R2E | <span data-en="AI: " data-hi="AI: "></span><a href="https://instagram.com/geo_r2e" target="_blank" style="color: var(--primary); text-decoration: none;">@geo_r2e</a> | <span data-en="Owner: " data-hi="मालिक: "></span><a href="https://instagram.com/geo_r2e" target="_blank" style="color: var(--primary); text-decoration: none;">@geo_r2e</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let currentLanguage = localStorage.getItem('language') || 'en';
+        let currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+
+        // Initialize theme and language
+        function init() {
+            updateTheme(currentTheme);
+            updateLanguage(currentLanguage);
+            navigateTo('home');
+        }
+
+        // Navigation function (SPA)
+        function navigateTo(pageId) {
+            console.log("[v0] Navigating to:", pageId);
+            
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+
+            // Show selected page
+            const selectedPage = document.getElementById(pageId);
+            if (selectedPage) {
+                selectedPage.classList.add('active');
+            }
+
+            // Update nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Close mobile menu
+            document.getElementById('navMenu').classList.remove('active');
+
+            // Smooth scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // Update URL without reload
+            window.history.pushState({ page: pageId }, '', `#${pageId}`);
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            updateTheme(newTheme);
+        }
+
+        function updateTheme(theme) {
+            currentTheme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            document.getElementById('themeIcon').textContent = theme === 'dark' ? '☀️' : '🌙';
+            localStorage.setItem('theme', theme);
+        }
+
+        // Language toggle
+        function toggleLanguage() {
+            const newLang = currentLanguage === 'en' ? 'hi' : 'en';
+            updateLanguage(newLang);
+        }
+
+        function updateLanguage(lang) {
+            currentLanguage = lang;
+            document.getElementById('langText').textContent = lang === 'en' ? 'हिंदी' : 'English';
+
+            // Update all text elements
+            document.querySelectorAll('[data-en]').forEach(el => {
+                const text = lang === 'en' ? el.getAttribute('data-en') : el.getAttribute('data-hi');
+                if (text) el.textContent = text;
+            });
+
+            // Update placeholders
+            document.querySelectorAll('[data-en-placeholder]').forEach(el => {
+                const placeholder = lang === 'en' ? el.getAttribute('data-en-placeholder') : el.getAttribute('data-hi-placeholder');
+                if (placeholder) el.placeholder = placeholder;
+            });
+
+            localStorage.setItem('language', lang);
+        }
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            document.getElementById('navMenu').classList.toggle('active');
+        }
+
+        function handleContactForm(event) {
+            event.preventDefault();
+            const name = document.getElementById('contactName').value;
+            const email = document.getElementById('contactEmail').value;
+            const subject = document.getElementById('contactSubject').value;
+            const message = document.getElementById('contactMessage').value;
+
+            console.log("[v0] Form submitted:", { name, email, subject, message });
+
+            const successDiv = document.getElementById('formSuccess');
+            const successMsg = currentLanguage === 'en' 
+                ? `Thank you ${name}! We've received your message and will get back to you soon.` 
+                : `धन्यवाद ${name}! हमने आपका संदेश प्राप्त कर लिया है और जल्द ही आपसे संपर्क करेंगे।`;
+            
+            successDiv.textContent = successMsg;
+            successDiv.classList.add('show');
+            setTimeout(() => successDiv.classList.remove('show'), 5000);
+
+            // Reset form
+            event.target.reset();
+        }
+
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', (event) => {
+            const page = event.state?.page || 'home';
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(page)?.classList.add('active');
+        });
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
